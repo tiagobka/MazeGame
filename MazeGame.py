@@ -1,0 +1,13 @@
+class MazeGame:
+    level = 1
+def calSize():
+    if (True):
+        print("hi")
+    #do something
+def calLocation():
+     if (True):
+         print("hi")
+
+def DrawMaze():
+    if (True):
+        print("hi")
