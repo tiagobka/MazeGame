@@ -10,4 +10,4 @@ def calLocation():
 
 def DrawMaze():
     if (True):
-        print("hi")
+        print("hello")
