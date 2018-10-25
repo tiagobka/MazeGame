@@ -2,7 +2,7 @@ class MazeGame:
     level = 1
 def calSize():
     if (True):
-        print("hi")
+        print("hello")
     #do something
 def calLocation():
      if (True):
