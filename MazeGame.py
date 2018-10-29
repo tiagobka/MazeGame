@@ -13,8 +13,6 @@ class MazeGame():
         self.level = random.randint(1, 4)
         self.cursor = [0, 0]
 
-
-
     def createMazeStructure(self):
         lvl = self.level * 10
         maze = []
@@ -114,13 +112,21 @@ class MazeGame():
         mainWindow = tk.Tk()
 
         mainWindow.title("The Maze Game")
-        mainWindow.geometry("1000x1000")
+        c = self.level
+        if (c == 1):
+            mainWindow.geometry("200x200")
+        elif (c == 2):
+            mainWindow.geometry("400x400")
+        elif (c == 3):
+            mainWindow.geometry("600x600")
+        elif (c == 4):
+            mainWindow.geometry("800x800")
 
         canvas = self.drawMaze(2, maze, mainWindow)
         canvas.pack(side=LEFT)
 
         menubar = Menu(mainWindow)
-        menubar.add_command(label="HI")
+        menubar.add_command(label="Welcome Advenger")
         mainWindow.config(menu=menubar)
 
         ''''var = IntVar(mainWindow)
