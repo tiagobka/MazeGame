@@ -10,7 +10,7 @@ def key(event):
 class MazeGame():
 
     def __init__(self):
-        self.level = random.randint(1, 4)
+        self.level = random.randint(2, 5)
         self.cursor = [0, 0]
 
     def createMazeStructure(self):
@@ -87,7 +87,10 @@ class MazeGame():
 
     def drawMaze(self, lvl, mazeStruct, mw):
         lvl = self.level * 10
-        divisions = (self.level * 600) / ((3) * lvl)
+        if (self.level != 5):
+            divisions = (self.level * 600) / ((3) * lvl)
+        elif (self.level == 5):
+            divisions = (self.level * 600) / ((4) * lvl)
 
         canvas1 = tk.Canvas(relief=FLAT, background="#D2D2D2", height=1200, width=1200)
         for i in range(lvl):
@@ -121,6 +124,8 @@ class MazeGame():
             mainWindow.geometry("600x600")
         elif (c == 4):
             mainWindow.geometry("800x800")
+        elif (c == 5):
+            mainWindow.geometry("750x750")
 
         canvas = self.drawMaze(2, maze, mainWindow)
         canvas.pack(side=LEFT)
