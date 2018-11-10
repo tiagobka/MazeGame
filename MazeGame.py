@@ -2,16 +2,17 @@ import random
 import tkinter as tk
 from tkinter import *
 
-
-def key(event):
-    print("pressed", repr(event.char))
-
-
 class MazeGame():
 
     def __init__(self):
-        self.level = random.randint(2, 5)
+        self.level = 0
         self.cursor = [0, 0]
+        self.dimension = 0
+        self.mazeStructure = []
+        self.divisions = 0
+        self.physCursor = None
+        #self.mainWindow = None
+
 
     def createMazeStructure(self):
         lvl = self.level * 10
@@ -50,7 +51,31 @@ class MazeGame():
                 lst.clear()
         maze[y][x] = 3
 
+        self.mazeStructure = maze
         return maze
+
+
+    def updateCursor(self,y,x):
+        if(not self.outOfBound(y, x, len(self.mazeStructure))):
+            #if (self.mazeStructure[y][x]==1): #if is path
+            if (self.mazeStructure[y][x] != 0): #if is not wall
+
+                    self.canvas.move(self.physCursor, (x-self.cursor [1])*self.divisions,(y-self.cursor [0])*self.divisions)
+                    self.cursor[0] = y
+                    self.cursor[1] = x
+
+            if (self.mazeStructure[y][x] == 3):
+                # Momentarely unbind keyboard keys
+                self.canvas.master.unbind_all("<Right>")
+                self.canvas.master.unbind_all("<Left>")
+                self.canvas.master.unbind_all("<Up>")
+                self.canvas.master.unbind_all("<Down>")
+                print("Level Finished")
+                self.canvas.delete("all")
+
+
+
+
 
     def getWalls(self, y, x, maze, dim):
         walls = []
@@ -85,73 +110,90 @@ class MazeGame():
             return True
         return False
 
-    def drawMaze(self, lvl, mazeStruct, mw):
-        lvl = self.level * 10
-        if (self.level != 5):
-            divisions = (self.level * 600) / ((3) * lvl)
-        elif (self.level == 5):
-            divisions = (self.level * 600) / ((4) * lvl)
+    def drawMenu(self):
+        Label(text= "Please Select a level:", width = 100).pack(side=TOP)
+        Button(self.mainWindow, text="Level 1", width=100, command = lambda lvl=1: self.levelSelected(lvl)).pack(side=TOP)
+        Button(self.mainWindow, text="Level 2", width=100, command = lambda lvl=2: self.levelSelected(lvl)).pack(side=TOP)
+        Button(self.mainWindow, text="Level 3", width=100, command = lambda lvl=3: self.levelSelected(lvl)).pack(side=TOP)
+        Button(self.mainWindow, text="Level 4", width=100, command = lambda lvl=4: self.levelSelected(lvl)).pack(side=TOP)
+        Button(self.mainWindow, text="Level 5", width=100, command = lambda lvl=5: self.levelSelected(lvl)).pack(side=TOP)
 
-        canvas1 = tk.Canvas(relief=FLAT, background="#D2D2D2", height=1200, width=1200)
+    def levelSelected(self,lvl):
+        print(lvl)
+        self.level = lvl
+        self.createMazeStructure()
+        self.drawMaze(self.mazeStructure)
+
+    def drawMaze(self, mazeStruct):
+        lvl = self.level * 10
+        #print(self.mainWindow.winfo_height())
+        divisions = (800)/lvl
+        self.divisions = divisions
+        #canvas1 = tk.Canvas(relief=FLAT, background="#D2D2D2", height=800, width=800)
+        #canvas1 = tk.Canvas(relief=FLAT, height=1200, width=1200)
+
         for i in range(lvl):
             row = i * divisions
             for j in range(lvl):
                 col = j * divisions
-                if (mazeStruct[i][j] == 1):
-                    canvas1.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="white")
-                elif (mazeStruct[i][j] == 0):
-                    canvas1.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="black")
-                elif (mazeStruct[i][j] == 4):
-                    canvas1.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="green")
-                elif (mazeStruct[i][j] == 3):
-                    canvas1.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="red")
+                if (mazeStruct[i][j] == 1): #It is a Path
+                    self.canvas.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="white")
+                elif (mazeStruct[i][j] == 0):#It is a wall
+                    self.canvas.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="black")
+                elif (mazeStruct[i][j] == 4):#It is the starting point
+                    self.canvas.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="green")
+                elif (mazeStruct[i][j] == 3):#It is the ending point
+                    self.canvas.create_rectangle(col, row, col + divisions - 1, row + divisions - 1, fill="red")
         cursory = self.cursor[0] * divisions
         cursorx = self.cursor[1] * divisions
-        oval = canvas1.create_oval(cursorx, cursory, cursorx + divisions - 1, cursory + divisions - 1, fill="blue")
+        #oval = canvas1.create_oval(cursorx, cursory, cursorx + divisions - 1, cursory + divisions - 1, fill="blue")
+        self.physCursor = self.canvas.create_oval(cursorx, cursory, cursorx + divisions - 1, cursory + divisions - 1, fill="blue")
 
-        return canvas1
+        self.canvas.pack(side=TOP)
 
-    def createUserInterface(self, maze):
-        mainWindow = tk.Tk()
+        self.mainWindow.bind_all( "<Left>", self.leftKey)
+        self.mainWindow.bind_all("<Right>", self.rightKey)
+        self.mainWindow.bind_all("<Up>", self.upKey)
+        self.mainWindow.bind_all("<Down>", self.downKey)
+        #self.canvas = canvas1
 
-        mainWindow.title("The Maze Game")
+        #return canvas1
+
+
+    def leftKey(self,event):
+        self.updateCursor(self.cursor[0],self.cursor[1]-1)
+
+    def rightKey(self,event):
+        self.updateCursor(self.cursor[0], self.cursor[1] + 1)
+
+
+    def upKey(self,event):
+        self.updateCursor(self.cursor[0] - 1, self.cursor[1])
+
+
+    def downKey(self,event):
+        self.updateCursor(self.cursor[0] + 1, self.cursor[1])
+
+    def createUserInterface(self):
+        self.mainWindow = tk.Tk()
+        self.mainWindow.title("The Maze Game")
         c = self.level
-        if (c == 1):
-            mainWindow.geometry("200x200")
-        elif (c == 2):
-            mainWindow.geometry("400x400")
-        elif (c == 3):
-            mainWindow.geometry("600x600")
-        elif (c == 4):
-            mainWindow.geometry("800x800")
-        elif (c == 5):
-            mainWindow.geometry("750x750")
-
-        canvas = self.drawMaze(2, maze, mainWindow)
-        canvas.pack(side=LEFT)
-
-        menubar = Menu(mainWindow)
-        menubar.add_command(label="Welcome Advenger")
-        mainWindow.config(menu=menubar)
-
-        ''''var = IntVar(mainWindow)
-        var.set(1)  # initial value
-        Label(text="Level:").pack()
-        option = OptionMenu(mainWindow, var,1,2,3,4,5,6,7,8,9,10)
-        option.pack()
-
-        def changelevel(canvas, mainWindow):
-            canvas.destroy()
-            maze = mg.createMazeStructure(var.get())
-            canvas = self.drawMaze(var.get(),maze,mainWindow)
-            canvas.pack(side = LEFT)
-            print(var.get())
-        Button(mainWindow, text = "Change Level", command = lambda canvas=canvas, mainWindow = mainWindow:changelevel(canvas,mainWindow)).pack()'''
-
-        mainWindow.mainloop()
+        self.mainWindow.geometry("800x800")
+        self.drawMenu()
+        self.canvas = tk.Canvas(relief=FLAT, background="#D2D2D2", height=800, width=800)
 
 
-mg = MazeGame()
-maze = mg.createMazeStructure()
-mg.createUserInterface(maze)
-# mg.drawMaze(1,maze)
+        self.mainWindow.focus_set()
+
+        menubar = Menu(self.mainWindow)
+        menubar.add_command(label=str(self.level))
+        self.mainWindow.config(menu=menubar)
+        self.mainWindow.mainloop()
+
+def main():
+    mg = MazeGame()
+    #maze = mg.createMazeStructure()
+    mg.createUserInterface()
+    # mg.drawMaze(1,maze)
+
+main()
