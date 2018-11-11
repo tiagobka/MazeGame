@@ -1,14 +1,13 @@
 # MazeGame
 **SJSU CMPE131 Project- Maze Game** 
+Python 3 Interpreter Required 
 
-name: Maze Game 
-
-power by Python 4.0
-
-Algorithm: Maze creation using Prim's Algorithm, Python tkinter User Interface.
+Algorithm: Maze creation using Prim's Algorithm
+User Interface: TKInter Package (Standard Python Interface) 
 
 **Game Play**
 
-There are 5 level of difficulties: 200x200, 400x400, 600x600, 750x750, 800x800
+This game have 5 playable levels which can be selected through the main Menu.
 
-The level is chose randomly. Player uses arrow key to move move cursor ( the blue point) to the destination (the red point) in the shortest way. 
+After selecting a level the Player should use the keyboard's arrow keys to move the blue cursor to the the end of the maze (Red Square) in the shortest way. 
+![Alt text](./Images/Maze.png?raw=true "Maze Sample")

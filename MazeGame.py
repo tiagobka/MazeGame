@@ -70,8 +70,9 @@ class MazeGame():
                 self.canvas.master.unbind_all("<Left>")
                 self.canvas.master.unbind_all("<Up>")
                 self.canvas.master.unbind_all("<Down>")
-                print("Level Finished")
                 self.canvas.delete("all")
+                self.canvas.forget()
+                self.f.pack()
 
 
 
@@ -111,18 +112,22 @@ class MazeGame():
         return False
 
     def drawMenu(self):
-        Label(text= "Please Select a level:", width = 100).pack(side=TOP)
-        Button(self.mainWindow, text="Level 1", width=100, command = lambda lvl=1: self.levelSelected(lvl)).pack(side=TOP)
-        Button(self.mainWindow, text="Level 2", width=100, command = lambda lvl=2: self.levelSelected(lvl)).pack(side=TOP)
-        Button(self.mainWindow, text="Level 3", width=100, command = lambda lvl=3: self.levelSelected(lvl)).pack(side=TOP)
-        Button(self.mainWindow, text="Level 4", width=100, command = lambda lvl=4: self.levelSelected(lvl)).pack(side=TOP)
-        Button(self.mainWindow, text="Level 5", width=100, command = lambda lvl=5: self.levelSelected(lvl)).pack(side=TOP)
+
+        self.f = Frame(self.mainWindow, width = 100 )
+        Label( self.f, text= "Please Select a level:", width = 100).pack(side=TOP)
+        Button( self.f, text="Level 1", width=100, command = lambda lvl=1: self.levelSelected(lvl)).pack(side=TOP)
+        Button( self.f, text="Level 2", width=100, command = lambda lvl=2: self.levelSelected(lvl)).pack(side=TOP)
+        Button( self.f, text="Level 3", width=100, command = lambda lvl=3: self.levelSelected(lvl)).pack(side=TOP)
+        Button(self.f, text="Level 4", width=100, command = lambda lvl=4: self.levelSelected(lvl)).pack(side=TOP)
+        Button( self.f, text="Level 5", width=100, command = lambda lvl=5: self.levelSelected(lvl)).pack(side=TOP)
+        self.f.pack(side = TOP)
 
     def levelSelected(self,lvl):
-        print(lvl)
         self.level = lvl
         self.createMazeStructure()
         self.drawMaze(self.mazeStructure)
+        self.f.forget()
+
 
     def drawMaze(self, mazeStruct):
         lvl = self.level * 10
@@ -186,7 +191,7 @@ class MazeGame():
         self.mainWindow.focus_set()
 
         menubar = Menu(self.mainWindow)
-        menubar.add_command(label=str(self.level))
+        menubar.add_command(label="Check Score")
         self.mainWindow.config(menu=menubar)
         self.mainWindow.mainloop()
 
