@@ -55,7 +55,8 @@ class scoretable():
 ## show the scoreboard  after game finish -> need name input
     def ScoreTable(self):
         for i in range(0, len(self.name)):
-            print(self.name[i] + "            ||           " + self.time[i] + "\n")
+            ## this  shows the newest score element
+            print(self.name[len(self.name) - 1 - i] + "            ||           " + self.time[len(self.time) - 1 - i] + "\n")
 
 
 
