@@ -1,6 +1,63 @@
 import random
 import tkinter as tk
 from tkinter import *
+import string
+
+
+class scoretable():
+    def __init__(self):
+        self.name = []
+        self.time = []
+## add new score and switch it to the firsl element of list maximum 10 elements the last one will be replaced
+    def addscore(self, name, time):
+        if (len(self.name) == 10):
+            for i in range(0, len(self.name) - 1):
+                self.name[i], self.name[i - 1] = self.name[i - 1], self.name[i]
+                self.time[i], self.time[i - 1] = self.time[i - 1], self.time[i]
+            self.name.pop()
+            self.time.pop()
+            self.name.append(name)
+            self.time.append(time)
+        else:
+            self.name.append(name)
+            self.time.append(time)
+
+## sort Algorithm that will sort the best score base on time (I dont think we need that)
+    def insertionSort(self):
+        for index in range(1, len(self.time)):
+            currentvalue = self.time[index]
+            position = index
+            while position > 0 and self.time[position - 1] > currentvalue:
+                self.time[position] = self.time[position - 1]
+                self.name[position], self.name[position - 1] = self.name[position - 1], self.name[position]
+                position = position - 1
+                self.time[position] = currentvalue
+
+## export scores to file txt----variable need to be string type to export to file
+    def in_to_file(self):
+        n = open("name.txt", "w")
+        t = open("time.txt", "w")
+        for i in range(0, len(self.name)):
+            n.write(str(self.name[i]) + "\n")
+            t.write(str(self.time[i]) + "\n")
+        n.close()
+        t.close()
+## import scores to program -> use when start new game
+    def out_to_file(self):
+        n = open("name.txt", "r")
+        t = open("time.txt", "r")
+
+        self.name = list(n.read().splitlines())
+        self.time = list(t.read().splitlines())
+        n.close()
+        t.close()
+
+## show the scoreboard  after game finish -> need name input
+    def ScoreTable(self):
+        for i in range(0, len(self.name)):
+            print(self.name[i] + "            ||           " + self.time[i] + "\n")
+
+
 
 class MazeGame():
 
@@ -11,6 +68,7 @@ class MazeGame():
         self.mazeStructure = []
         self.divisions = 0
         self.physCursor = None
+        self.score=0
         #self.mainWindow = None
 
 
