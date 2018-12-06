@@ -1,26 +1,26 @@
 import random
 import tkinter as tk
 from tkinter import *
-import string
+import datetime
+from tkinter import simpledialog
 
 
 class scoretable():
     def __init__(self):
         self.name = []
         self.time = []
+        self.out_from_file()
+
 ## add new score and switch it to the firsl element of list maximum 10 elements the last one will be replaced
-    def addscore(self, name, time):
-        if (len(self.name) == 10):
-            for i in range(0, len(self.name) - 1):
-                self.name[i], self.name[i - 1] = self.name[i - 1], self.name[i]
-                self.time[i], self.time[i - 1] = self.time[i - 1], self.time[i]
-            self.name.pop()
-            self.time.pop()
-            self.name.append(name)
-            self.time.append(time)
-        else:
-            self.name.append(name)
-            self.time.append(time)
+    def addscore(self, name, time,lvl):
+        score = int(((16.5 * lvl - 8.5) - time) * 10 / (lvl))
+        self.name.append(name)
+        self.time.append(score)
+        self.name = [x for _, x in sorted(zip(self.time, self.name),reverse =True)]
+        self.time.sort(reverse = True)
+        self.in_to_file()
+
+
 
 ## sort Algorithm that will sort the best score base on time (I dont think we need that)
     def insertionSort(self):
@@ -33,30 +33,38 @@ class scoretable():
                 position = position - 1
                 self.time[position] = currentvalue
 
+    def isNewRecord(self,totalTime, lvl):
+        score = int(((16.5 * lvl - 8.5) - totalTime) * 10 / (lvl))
+        if (score > int(self.time[len(self.time)-1]) or len(self.time) < 10):
+            return True
+        else:
+            return False
+
+
+
 ## export scores to file txt----variable need to be string type to export to file
     def in_to_file(self):
-        n = open("name.txt", "w")
-        t = open("time.txt", "w")
-        for i in range(0, len(self.name)):
-            n.write(str(self.name[i]) + "\n")
-            t.write(str(self.time[i]) + "\n")
-        n.close()
-        t.close()
+        file = open("score.dat", "w")
+        if len(self.name) > 10:
+            max = 10
+        else:
+            max = len(self.name)
+        #t = open("time.txt", "w")
+        for i in range(0, max):
+            file.write(str(self.name[i]) + ":"+ str(self.time[i]) + "\n")
+            #t.write(str(self.time[i]) + "\n")
+        #n.close()
+        file.close()
 ## import scores to program -> use when start new game
-    def out_to_file(self):
-        n = open("name.txt", "r")
-        t = open("time.txt", "r")
+    def out_from_file(self):
 
-        self.name = list(n.read().splitlines())
-        self.time = list(t.read().splitlines())
-        n.close()
-        t.close()
+        with open("score.dat", "r") as file:
+            line = file.readline()
+            while(line):
+                self.name.append(line.split(":")[0].strip())
+                self.time.append(int(line.split(":")[1].strip()))
+                line = file.readline()
 
-## show the scoreboard  after game finish -> need name input
-    def ScoreTable(self):
-        for i in range(0, len(self.name)):
-            ## this  shows the newest score element
-            print(self.name[len(self.name) - 1 - i] + "            ||           " + self.time[len(self.time) - 1 - i] + "\n")
 
 
 
@@ -69,8 +77,9 @@ class MazeGame():
         self.mazeStructure = []
         self.divisions = 0
         self.physCursor = None
-        self.score=0
-        #self.mainWindow = None
+        self.score= scoretable()
+        self.startTime = 0
+        self.firstMove = True
 
 
     def createMazeStructure(self):
@@ -109,12 +118,16 @@ class MazeGame():
                 walls.extend(lst)
                 lst.clear()
         maze[y][x] = 3
-
         self.mazeStructure = maze
         return maze
 
 
     def updateCursor(self,y,x):
+
+        if (self.firstMove):
+            self.startTime = datetime.datetime.now()
+            self.firstMove = False
+
         if(not self.outOfBound(y, x, len(self.mazeStructure))):
             #if (self.mazeStructure[y][x]==1): #if is path
             if (self.mazeStructure[y][x] != 0): #if is not wall
@@ -131,10 +144,16 @@ class MazeGame():
                 self.canvas.master.unbind_all("<Down>")
                 self.canvas.delete("all")
                 self.canvas.forget()
+                self.firstMove = True
+                endtime = datetime.datetime.now()
+                totalTime = (endtime-self.startTime).total_seconds()
+
+                if self.score.isNewRecord(totalTime, self.level):
+                    answer = simpledialog.askstring("New High Score!", "What is your name",
+                                                    parent=self.mainWindow)
+                    if (answer):
+                        self.score.addscore(answer,totalTime,self.level)
                 self.f.pack()
-
-
-
 
 
     def getWalls(self, y, x, maze, dim):
@@ -245,19 +264,25 @@ class MazeGame():
         self.mainWindow.geometry("800x800")
         self.drawMenu()
         self.canvas = tk.Canvas(relief=FLAT, background="#D2D2D2", height=800, width=800)
-
-
         self.mainWindow.focus_set()
 
         menubar = Menu(self.mainWindow)
-        menubar.add_command(label="Check Score")
+        menubar.add_command(label="Check Scores", command = self.scoreButton )
         self.mainWindow.config(menu=menubar)
         self.mainWindow.mainloop()
+    def scoreButton(self):
+        scoreMenu = tk.Toplevel()
+        scoreMenu.title("Score")
+        Label(scoreMenu,text = "Player").grid(row=0, column = 0)
+        Label(scoreMenu, text="Score").grid(row=0, column=1)
+        for i,n in enumerate(self.score.name):
+            Label(scoreMenu,text = n, width = 20, anchor = "e",borderwidth=2,relief="groove").grid(row = i +1, column = 0)
+            Label(scoreMenu, text=self.score.time[i], width = 20,borderwidth=2,relief="groove").grid(row=i + 1, column=1)
+
+
 
 def main():
     mg = MazeGame()
-    #maze = mg.createMazeStructure()
     mg.createUserInterface()
-    # mg.drawMaze(1,maze)
 
 main()
