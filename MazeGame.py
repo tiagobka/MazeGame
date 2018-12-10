@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import *
 import datetime
 from tkinter import simpledialog
+from VirtualKeyboard import VirtualKeyboard
 
 
 class scoretable():
@@ -39,6 +40,8 @@ class scoretable():
             return True
         else:
             return False
+    def score(self,totalTime,lvl):
+        return int(((16.5 * lvl - 8.5) - totalTime) * 10 / (lvl))
 
 
 
@@ -66,8 +69,6 @@ class scoretable():
                 line = file.readline()
 
 
-
-
 class MazeGame():
 
     def __init__(self):
@@ -80,6 +81,8 @@ class MazeGame():
         self.score= scoretable()
         self.startTime = 0
         self.firstMove = True
+        self.scoreMenu = None
+        self.vk = VirtualKeyboard()
 
 
     def createMazeStructure(self):
@@ -144,14 +147,15 @@ class MazeGame():
                 self.canvas.master.unbind_all("<Down>")
                 self.canvas.delete("all")
                 self.canvas.forget()
+                self.mainWindow.bind("<Key>", self.keyPress)
                 self.firstMove = True
                 endtime = datetime.datetime.now()
                 totalTime = (endtime-self.startTime).total_seconds()
-
                 if self.score.isNewRecord(totalTime, self.level):
-                    answer = simpledialog.askstring("New High Score!", "What is your name",
-                                                    parent=self.mainWindow)
-                    if (answer):
+                    answer = self.vk.displayKeyboard(self.score.score(totalTime,self.level))
+                    #answer = simpledialog.askstring("New High Score!", "What is your name",
+                    #                                parent=self.mainWindow)
+                    if (answer or answer!= ""):
                         self.score.addscore(answer,totalTime,self.level)
                 self.f.pack()
 
@@ -191,14 +195,17 @@ class MazeGame():
 
     def drawMenu(self):
 
+
         self.f = Frame(self.mainWindow, width = 100 )
         Label( self.f, text= "Please Select a level:", width = 100).pack(side=TOP)
-        Button( self.f, text="Level 1", width=100, command = lambda lvl=1: self.levelSelected(lvl)).pack(side=TOP)
-        Button( self.f, text="Level 2", width=100, command = lambda lvl=2: self.levelSelected(lvl)).pack(side=TOP)
-        Button( self.f, text="Level 3", width=100, command = lambda lvl=3: self.levelSelected(lvl)).pack(side=TOP)
-        Button(self.f, text="Level 4", width=100, command = lambda lvl=4: self.levelSelected(lvl)).pack(side=TOP)
-        Button( self.f, text="Level 5", width=100, command = lambda lvl=5: self.levelSelected(lvl)).pack(side=TOP)
+        Button( self.f, text="Level 1", width=100, command = lambda lvl=1: self.levelSelected(lvl), takefocus=False,activebackground="grey").pack(side=TOP)
+        Button( self.f, text="Level 2", width=100, command = lambda lvl=2: self.levelSelected(lvl), takefocus=False,activebackground="grey").pack(side=TOP)
+        Button( self.f, text="Level 3", width=100, command = lambda lvl=3: self.levelSelected(lvl), takefocus=False,activebackground="grey").pack(side=TOP)
+        Button(self.f, text="Level 4", width=100, command = lambda lvl=4: self.levelSelected(lvl), takefocus=False,activebackground="grey").pack(side=TOP)
+        Button( self.f, text="Level 5", width=100, command = lambda lvl=5: self.levelSelected(lvl), takefocus=False,activebackground="grey").pack(side=TOP)
         self.f.pack(side = TOP)
+        #self.f.focus_force()
+        #self.f.bind("<Key>", self.keyPress)
 
     def levelSelected(self,lvl):
         self.level = lvl
@@ -208,6 +215,7 @@ class MazeGame():
 
 
     def drawMaze(self, mazeStruct):
+        self.mainWindow.unbind("<Key>")
         lvl = self.level * 10
         #print(self.mainWindow.winfo_height())
         divisions = (800)/lvl
@@ -265,21 +273,60 @@ class MazeGame():
         self.drawMenu()
         self.canvas = tk.Canvas(relief=FLAT, background="#D2D2D2", height=800, width=800)
         self.mainWindow.focus_set()
+        self.mainWindow.bind("<Key>", self.keyPress)
 
         menubar = Menu(self.mainWindow)
-        menubar.add_command(label="Check Scores", command = self.scoreButton )
+        menubar.add_command(label="Check Scores", command = lambda event = None:self.scoreButton(event) )
+        #menubar.bind("<Tab>", self.scoreButton)
+
         self.mainWindow.config(menu=menubar)
         self.mainWindow.mainloop()
-    def scoreButton(self):
-        scoreMenu = tk.Toplevel()
-        scoreMenu.title("Score")
-        Label(scoreMenu,text = "Player").grid(row=0, column = 0)
-        Label(scoreMenu, text="Score").grid(row=0, column=1)
-        for i,n in enumerate(self.score.name):
-            Label(scoreMenu,text = n, width = 20, anchor = "e",borderwidth=2,relief="groove").grid(row = i +1, column = 0)
-            Label(scoreMenu, text=self.score.time[i], width = 20,borderwidth=2,relief="groove").grid(row=i + 1, column=1)
 
 
+    def scoreButton(self,event):
+        if (self.scoreMenu):
+            self.scoreMenu.destroy()
+            del(self.scoreMenu)
+            self.scoreMenu = None
+        else:
+            self.scoreMenu = tk.Toplevel()
+            self.scoreMenu.title("Score")
+            Label(self.scoreMenu,text = "Player").grid(row=0, column = 0)
+            Label(self.scoreMenu, text="Score").grid(row=0, column=1)
+            for i,n in enumerate(self.score.name):
+                Label(self.scoreMenu,text = n, width = 20, anchor = "e",borderwidth=2,relief="groove").grid(row = i +1, column = 0)
+                Label(self.scoreMenu, text=self.score.time[i], width = 20,borderwidth=2,relief="groove").grid(row=i + 1, column=1)
+
+    def keyPress(self,event):
+        #print(event.keycode )
+
+        if (event.keycode == 9):
+            self.scoreButton(event)
+            #print(self.f.slaves())
+        if (event.keycode == 38):
+            if self.level == 0:
+                self.level = 5
+                self.f.slaves()[1:][4].config(state = "active")
+            elif self.level > 1:
+                self.level -=1
+                for i in self.f.slaves()[1:]:
+                    i.config(state="normal")
+                self.f.slaves()[self.level].config(state='active')
+
+
+        if (event.keycode == 40):
+            if self.level == 0:
+                self.level = 1
+                self.f.slaves()[1:][0].config(state = "active")
+            elif self.level < 5:
+                self.level +=1
+                for i in self.f.slaves()[1:]:
+                    i.config(state="normal")
+                self.f.slaves()[self.level].config(state='active')
+
+        if (event.keycode == 13):
+            if (self.level !=0):
+                self.f.slaves()[self.level].invoke()
 
 def main():
     mg = MazeGame()
